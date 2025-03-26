@@ -1,0 +1,92 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Courses</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 flex">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white shadow-md h-screen p-6 fixed top-0 left-0">
+        <div class="mb-8 text-center">
+            <img src="{% static 'images/logo.png' %}" alt="GrowthMate Logo" class="h-full mx-auto">
+        </div>
+        <nav>
+            <ul>
+                <li class="mb-4">
+                    <a href="{% url 'login' %}" class="flex items-center text-gray-700 hover:text-blue-500">
+                        <span class="mr-3"></span> Home
+                    </a>
+                </li>
+                <li class="mb-4 bg-gray-100 p-3 rounded-lg">
+                    <a href="{% url 'login' %}" class="flex items-center text-blue-600 font-semibold">
+                        <span class="mr-3"></span> My Courses
+                    </a>
+                </li>
+                <li class="mb-4">
+                    <a href="{% url 'login' %}" class="flex items-center text-gray-700 hover:text-blue-500">
+                        <span class="mr-3"></span> Profile Settings
+                    </a>
+                </li>
+                <li class="mb-4">
+                    <a href="{% url 'login' %}" class="flex items-center text-gray-700 hover:text-blue-500">
+                        <span class="mr-3"></span> Help Center
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        <div class="absolute bottom-6 left-6">
+            <a href="{% url 'logout' %}" class="flex items-center text-red-600 font-semibold">
+                <span class="mr-3"></span> Logout
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-8 ml-64">
+        <div class="flex justify-between items-center mb-6">
+            <div class="flex items-center space-x-3">
+                <!-- Search Bar -->
+                <div class="relative">
+                    <input type="text" placeholder="Search courses..."
+                        class="border p-2 rounded-lg shadow-sm w-96 pl-4 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                </div>
+                <!-- Filter Button -->
+                <button class="bg-gray-200 px-4 py-2 rounded-lg shadow hover:bg-gray-300">
+                    Filter
+                </button>
+                <!-- Sort Button -->
+                <button class="bg-gray-200 px-4 py-2 rounded-lg shadow hover:bg-gray-300">
+                    ↕ Sort
+                </button>
+            </div>
+            <!-- New Course Button -->
+            <button class="bg-orange-500 text-white px-4 py-2 rounded-lg shadow hover:bg-orange-600">
+                New Course
+            </button>
+        </div>
+
+        <h2 class="text-xl font-semibold mb-4">Trending Courses</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {% for course in trending_courses %}
+            <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+                <img src="{{ course.image.url }}" alt="{{ course.title }}" class="w-full h-40 object-cover">
+                <div class="p-5">
+                    <h3 class="text-lg font-semibold">{{ course.title }}</h3>
+                    <p class="text-gray-600 text-sm">Duration: {{ course.duration }}</p>
+                    <a href="#"
+                        class="block mt-4 bg-orange-500 text-white text-center py-2 rounded-lg hover:bg-orange-600">
+                        Enroll Now
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+</body>
+
+</html>

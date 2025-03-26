@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GM-Bot - Growth Mate</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f0f2f5;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        .chat-container {
+            max-width: 450px;
+            margin: 2rem auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-header {
+            padding: 1rem;
+            border-bottom: 1px solid #e5e5e5;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chat-header h5 {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .chat-messages {
+            height: 500px;
+            overflow-y: auto;
+            padding: 1rem;
+            background-color: white;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            max-width: 80%;
+        }
+
+        .message.bot {
+            margin-right: auto;
+        }
+
+        .message.user {
+            margin-left: auto;
+        }
+
+        .message-content {
+            padding: 0.75rem 1rem;
+            border-radius: 15px;
+            font-size: 0.95rem;
+        }
+
+        .message.bot .message-content {
+            background-color: #f0f2f5;
+            color: #000;
+        }
+
+        .message.user .message-content {
+            background-color: #f4511e;
+            color: white;
+        }
+
+        .timestamp {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 0.25rem;
+        }
+
+        .chat-input {
+            padding: 1rem;
+            border-top: 1px solid #e5e5e5;
+            background: white;
+            border-radius: 0 0 12px 12px;
+        }
+
+        .chat-input form {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #e5e5e5;
+            border-radius: 20px;
+            outline: none;
+            font-size: 0.95rem;
+        }
+
+        .chat-input input:focus {
+            border-color: #f4511e;
+        }
+
+        .quick-replies {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+
+        .quick-reply {
+            background: #f0f2f5;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 15px;
+            white-space: nowrap;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .quick-reply:hover {
+            background: #e4e6e9;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            color: #666;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h5>GM-Bot</h5>
+            <button class="close-btn">&times;</button>
+        </div>
+        <div id="chat-messages" class="chat-messages">
+            {% for message in messages %}
+            <div class="message {% if message.is_bot %}bot{% else %}user{% endif %}">
+                <div class="message-content">{{ message.message }}</div>
+                <div class="timestamp">{{ message.timestamp|date:"g:i a"|lower }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="chat-input">
+            <form id="chat-form">
+                <input type="text" id="message-input" placeholder="Write here" required>
+            </form>
+            <div class="quick-replies">
+                <button class="quick-reply">Hi there! How's your day going?</button>
+                <button class="quick-reply">What are your hobbies</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const chatForm = document.getElementById('chat-form');
+            const messageInput = document.getElementById('message-input');
+            const chatMessages = document.getElementById('chat-messages');
+            const quickReplies = document.querySelectorAll('.quick-reply');
+
+            // Handle quick reply clicks
+            quickReplies.forEach(button => {
+                button.addEventListener('click', () => {
+                    messageInput.value = button.textContent;
+                    chatForm.dispatchEvent(new Event('submit'));
+                });
+            });
+
+            chatForm.addEventListener('submit', async function (e) {
+                e.preventDefault();
+
+                const message = messageInput.value.trim();
+                if (!message) return;
+
+                // Add user message to chat
+                appendMessage(message, false);
+                messageInput.value = '';
+
+                try {
+                    const response = await fetch('/send-message/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: `message=${encodeURIComponent(message)}`
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        appendMessage(data.bot_message.message, true);
+                    } else {
+                        appendMessage('Sorry, I encountered an error. Please try again.', true);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    appendMessage('Sorry, I encountered an error. Please try again.', true);
+                }
+            });
+
+            function appendMessage(message, isBot) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${isBot ? 'bot' : 'user'}`;
+
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+                contentDiv.textContent = message;
+
+                const timestamp = document.createElement('div');
+                timestamp.className = 'timestamp';
+                timestamp.textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toLowerCase();
+
+                messageDiv.appendChild(contentDiv);
+                messageDiv.appendChild(timestamp);
+
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+
+            // Close button functionality
+            document.querySelector('.close-btn').addEventListener('click', function () {
+                document.querySelector('.chat-container').style.display = 'none';
+            });
+        });
+    </script>
+</body>
+
+</html>
