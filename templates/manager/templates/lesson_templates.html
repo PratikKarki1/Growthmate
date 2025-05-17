@@ -1,0 +1,152 @@
+<!-- Lesson Template -->
+<template id="lesson-template">
+    <div class="lesson-item bg-gray-50 p-4 rounded-lg" data-lesson-id="">
+        <input type="hidden" name="lesson_ids[]" value="">
+        <input type="hidden" name="lesson_deleted[]" value="false">
+        <div class="lesson-header flex items-center justify-between mb-4">
+            <div class="flex items-center space-x-4">
+                <button type="button" class="toggle-lesson text-gray-400 hover:text-gray-600">
+                    <svg class="w-5 h-5 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <h3 class="text-lg font-medium text-gray-800">New Lesson</h3>
+            </div>
+            <button type="button" class="remove-lesson text-red-600 hover:text-red-800">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="lesson-content">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Lesson Title</label>
+                    <input type="text" name="lesson_title[]" required
+                        class="lesson-title-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Duration (minutes)</label>
+                    <input type="number" name="lesson_duration[]" required
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">
+                </div>
+            </div>
+            <div class="mt-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h4 class="text-sm font-medium text-gray-700">Content Blocks</h4>
+                    <div class="flex space-x-2">
+                        <button type="button" class="add-content-block text-sm px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200" data-type="text">Text</button>
+                        <button type="button" class="add-content-block text-sm px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200" data-type="image">Image</button>
+                        <button type="button" class="add-content-block text-sm px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200" data-type="video">Video</button>
+                        <button type="button" class="add-content-block text-sm px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200" data-type="file">File</button>
+                    </div>
+                </div>
+                <div class="content-blocks space-y-4">
+                    <!-- Content blocks will be added here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<!-- Text Block Template -->
+<template id="text-block-template">
+    <div class="content-block bg-white p-4 rounded-lg shadow" draggable="true" data-type="text">
+        <div class="flex justify-between items-start mb-4">
+            <div class="flex items-center">
+                <button type="button" class="drag-handle mr-2 text-gray-400 hover:text-gray-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <span class="font-medium text-gray-700">Text Content</span>
+            </div>
+            <button type="button" class="remove-content-block text-gray-400 hover:text-red-500">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="content-editor">
+            <textarea class="ck-editor" name="content_block_text[]"></textarea>
+            <input type="hidden" name="lesson_undefined_content_block_type[]" value="text">
+        </div>
+    </div>
+</template>
+
+<!-- Image Block Template -->
+<template id="image-block-template">
+    <div class="content-block bg-white p-4 rounded-lg shadow" draggable="true" data-type="image">
+        <div class="flex justify-between items-start mb-4">
+            <div class="flex items-center">
+                <button type="button" class="drag-handle mr-2 text-gray-400 hover:text-gray-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <span class="font-medium text-gray-700">Image</span>
+            </div>
+            <button type="button" class="remove-content-block text-gray-400 hover:text-red-500">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="content-editor">
+            <div class="image-preview mb-2"></div>
+            <input type="file" name="lesson_undefined_content_block_file[]" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100">
+            <input type="hidden" name="lesson_undefined_content_block_type[]" value="image">
+        </div>
+    </div>
+</template>
+
+<!-- Video Block Template -->
+<template id="video-block-template">
+    <div class="content-block bg-white p-4 rounded-lg shadow" draggable="true" data-type="video">
+        <div class="flex justify-between items-start mb-4">
+            <div class="flex items-center">
+                <button type="button" class="drag-handle mr-2 text-gray-400 hover:text-gray-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <span class="font-medium text-gray-700">Video</span>
+            </div>
+            <button type="button" class="remove-content-block text-gray-400 hover:text-red-500">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="content-editor">
+            <input type="text" name="content_block_text[]" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500" placeholder="Enter video URL or embed code">
+            <input type="hidden" name="lesson_undefined_content_block_type[]" value="video">
+        </div>
+    </div>
+</template>
+
+<!-- File Block Template -->
+<template id="file-block-template">
+    <div class="content-block bg-white p-4 rounded-lg shadow" draggable="true" data-type="file">
+        <div class="flex justify-between items-start mb-4">
+            <div class="flex items-center">
+                <button type="button" class="drag-handle mr-2 text-gray-400 hover:text-gray-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <span class="font-medium text-gray-700">File</span>
+            </div>
+            <button type="button" class="remove-content-block text-gray-400 hover:text-red-500">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="content-editor">
+            <div class="file-preview mb-2"></div>
+            <input type="file" name="lesson_undefined_content_block_file[]" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100">
+            <input type="hidden" name="lesson_undefined_content_block_type[]" value="file">
+        </div>
+    </div>
+</template> 

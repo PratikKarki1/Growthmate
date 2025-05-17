@@ -1,0 +1,509 @@
+{% extends 'manager/base.html' %}
+{% load static %}
+{% load course_filters %}
+
+{% block extra_css %}
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<style>
+.content-block {
+    transition: all 0.3s ease;
+}
+.content-block.dragging {
+    opacity: 0.5;
+    transform: scale(0.95);
+}
+.drop-zone {
+    border: 2px dashed #e5e7eb;
+    min-height: 100px;
+    transition: all 0.3s ease;
+}
+.drop-zone.active {
+    border-color: #f97316;
+    background-color: #fff7ed;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-100">
+    <!-- Main Content -->
+    <main class="ml-64 p-8">
+        <!-- Header Section -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <h1 class="text-2xl font-bold text-gray-800">
+                    {% if course %}Edit Course{% else %}Add New Course{% endif %}
+                </h1>
+                <a href="{% url 'manager_courses' %}" class="text-gray-600 hover:text-gray-900">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                </a>
+            </div>
+        </div>
+
+        <!-- Course Form -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <form method="post" enctype="multipart/form-data" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Basic Information -->
+                <div class="space-y-4">
+                    <h2 class="text-lg font-semibold text-gray-800">Basic Information</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="title" class="block text-sm font-medium text-gray-700">Course Title</label>
+                            <input type="text" name="title" id="title" value="{{ course.title|default:'' }}" required
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">
+                        </div>
+                        <div>
+                            <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
+                            <select name="category" id="category" required
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">
+                                <option value="">Select a category</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}" {% if course.category_id == category.id %}selected{% endif %}>{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label for="level" class="block text-sm font-medium text-gray-700">Level</label>
+                            <select name="level" id="level" required
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">
+                                <option value="beginner" {% if course.level == 'beginner' %}selected{% endif %}>Beginner</option>
+                                <option value="intermediate" {% if course.level == 'intermediate' %}selected{% endif %}>Intermediate</option>
+                                <option value="advanced" {% if course.level == 'advanced' %}selected{% endif %}>Advanced</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="duration" class="block text-sm font-medium text-gray-700">Duration (minutes)</label>
+                            <input type="number" name="duration" id="duration" value="{{ course.duration|default:'' }}"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                        <textarea name="description" id="description" rows="4" required
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">{{ course.description|default:'' }}</textarea>
+                    </div>
+                </div>
+
+                <!-- Course Details -->
+                <div class="space-y-4">
+                    <h2 class="text-lg font-semibold text-gray-800">Course Details</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="prerequisites" class="block text-sm font-medium text-gray-700">Prerequisites</label>
+                            <textarea name="prerequisites" id="prerequisites" rows="3"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">{{ course.prerequisites|default:'' }}</textarea>
+                        </div>
+                        <div>
+                            <label for="objectives" class="block text-sm font-medium text-gray-700">Learning Objectives</label>
+                            <textarea name="objectives" id="objectives" rows="3"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">{{ course.objectives|default:'' }}</textarea>
+                        </div>
+                        <div>
+                            <label for="target_audience" class="block text-sm font-medium text-gray-700">Target Audience</label>
+                            <textarea name="target_audience" id="target_audience" rows="3"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">{{ course.target_audience|default:'' }}</textarea>
+                        </div>
+                        <div>
+                            <label for="max_students" class="block text-sm font-medium text-gray-700">Maximum Students</label>
+                            <input type="number" name="max_students" id="max_students" value="{{ course.max_students|default:'' }}"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Course Media -->
+                <div class="space-y-4">
+                    <h2 class="text-lg font-semibold text-gray-800">Course Media</h2>
+                    <div>
+                        <label for="thumbnail" class="block text-sm font-medium text-gray-700">Course Thumbnail</label>
+                        <input type="file" name="thumbnail" id="thumbnail" accept="image/*"
+                            class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100">
+                        {% if course.thumbnail %}
+                            <div class="mt-2">
+                                <img src="{{ course.thumbnail.url }}" alt="Current thumbnail" class="h-32 w-auto rounded-lg">
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Course Settings -->
+                <div class="space-y-4">
+                    <h2 class="text-lg font-semibold text-gray-800">Course Settings</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="flex items-center">
+                            <input type="checkbox" name="is_active" id="is_active" {% if course.is_active %}checked{% endif %}
+                                class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded">
+                            <label for="is_active" class="ml-2 block text-sm text-gray-700">Active Course</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" name="is_featured" id="is_featured" {% if course.is_featured %}checked{% endif %}
+                                class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded">
+                            <label for="is_featured" class="ml-2 block text-sm text-gray-700">Featured Course</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" name="certificate_available" id="certificate_available" {% if course.certificate_available %}checked{% endif %}
+                                class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded">
+                            <label for="certificate_available" class="ml-2 block text-sm text-gray-700">Certificate Available</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Course Lessons -->
+                {% if course %}
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-semibold text-gray-800">Course Lessons</h2>
+                        <a href="{% url 'manage_lessons' course.id %}" class="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            Manage Lessons
+                        </a>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <p class="text-sm text-gray-600">You can manage lessons in a separate page for better organization.</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Form Actions -->
+                <div class="flex justify-end space-x-4">
+                    <a href="{% url 'manager_courses' %}" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        Cancel
+                    </a>
+                    <button type="submit" class="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        {% if course %}Update Course{% else %}Create Course{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+
+<!-- Lesson Template -->
+<template id="lesson-template">
+    <div class="lesson-item bg-gray-50 p-4 rounded-lg">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-medium text-gray-800">New Lesson</h3>
+            <button type="button" class="remove-lesson text-red-600 hover:text-red-800">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Lesson Title</label>
+                <input type="text" name="lesson_title[]" required
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Duration (minutes)</label>
+                <input type="number" name="lesson_duration[]" required
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">
+            </div>
+        </div>
+        <div class="mt-4">
+            <div class="flex justify-between items-center mb-4">
+                <h4 class="text-sm font-medium text-gray-700">Content Blocks</h4>
+                <div class="flex space-x-2">
+                    <button type="button" class="add-content-block text-sm px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200" data-type="text">
+                        Text
+                    </button>
+                    <button type="button" class="add-content-block text-sm px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200" data-type="image">
+                        Image
+                    </button>
+                    <button type="button" class="add-content-block text-sm px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200" data-type="video">
+                        Video
+                    </button>
+                    <button type="button" class="add-content-block text-sm px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200" data-type="file">
+                        File
+                    </button>
+                </div>
+            </div>
+            <div class="content-blocks space-y-4">
+                <!-- Content blocks will be added here -->
+            </div>
+        </div>
+    </div>
+</template>
+
+<!-- Content Block Templates -->
+<template id="text-block-template">
+    <div class="content-block bg-white p-4 rounded-lg shadow" draggable="true" data-type="text">
+        <div class="flex justify-between items-start mb-4">
+            <div class="flex items-center">
+                <button type="button" class="drag-handle mr-2 text-gray-400 hover:text-gray-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <span class="font-medium text-gray-700">Text</span>
+            </div>
+            <button type="button" class="remove-content-block text-gray-400 hover:text-red-500">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="content-editor">
+            <div class="quill-editor"></div>
+        </div>
+    </div>
+</template>
+
+<template id="image-block-template">
+    <div class="content-block bg-white p-4 rounded-lg shadow" draggable="true" data-type="image">
+        <div class="flex justify-between items-start mb-4">
+            <div class="flex items-center">
+                <button type="button" class="drag-handle mr-2 text-gray-400 hover:text-gray-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <span class="font-medium text-gray-700">Image</span>
+            </div>
+            <button type="button" class="remove-content-block text-gray-400 hover:text-red-500">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="content-editor">
+            <div class="image-upload">
+                <input type="file" accept="image/*" class="hidden" onchange="handleImageUpload(this)">
+                <div class="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50" onclick="this.previousElementSibling.click()">
+                    <div class="text-center">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        <p class="mt-1 text-sm text-gray-600">Click to upload image</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<template id="video-block-template">
+    <div class="content-block bg-white p-4 rounded-lg shadow" draggable="true" data-type="video">
+        <div class="flex justify-between items-start mb-4">
+            <div class="flex items-center">
+                <button type="button" class="drag-handle mr-2 text-gray-400 hover:text-gray-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <span class="font-medium text-gray-700">Video</span>
+            </div>
+            <button type="button" class="remove-content-block text-gray-400 hover:text-red-500">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="content-editor">
+            <div class="video-embed">
+                <input type="text" placeholder="Paste video embed code or URL" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" onchange="handleVideoEmbed(this)">
+            </div>
+        </div>
+    </div>
+</template>
+
+<template id="file-block-template">
+    <div class="content-block bg-white p-4 rounded-lg shadow" draggable="true" data-type="file">
+        <div class="flex justify-between items-start mb-4">
+            <div class="flex items-center">
+                <button type="button" class="drag-handle mr-2 text-gray-400 hover:text-gray-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <span class="font-medium text-gray-700">File</span>
+            </div>
+            <button type="button" class="remove-content-block text-gray-400 hover:text-red-500">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="content-editor">
+            <div class="file-upload">
+                <input type="file" class="hidden" onchange="handleFileUpload(this)">
+                <div class="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50" onclick="this.previousElementSibling.click()">
+                    <div class="text-center">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                        </svg>
+                        <p class="mt-1 text-sm text-gray-600">Click to upload file</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+{% block extra_js %}
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+<script>
+let quillEditors = [];
+let dragSrcEl = null;
+
+function initQuillEditor(container) {
+    const editor = new Quill(container, {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                ['bold', 'italic', 'underline', 'strike'],
+                ['blockquote', 'code-block'],
+                [{ 'header': 1 }, { 'header': 2 }],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                [{ 'script': 'sub'}, { 'script': 'super' }],
+                [{ 'indent': '-1'}, { 'indent': '+1' }],
+                [{ 'direction': 'rtl' }],
+                [{ 'size': ['small', false, 'large', 'huge'] }],
+                [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                [{ 'color': [] }, { 'background': [] }],
+                [{ 'font': [] }],
+                [{ 'align': [] }],
+                ['clean']
+            ]
+        }
+    });
+    quillEditors.push(editor);
+    return editor;
+}
+
+// Initialize existing Quill editors
+document.querySelectorAll('.quill-editor').forEach(editor => {
+    initQuillEditor(editor);
+});
+
+// Add new lesson
+document.getElementById('add-lesson').addEventListener('click', function() {
+    const lessonCount = document.querySelectorAll('.lesson-item').length + 1;
+    const newLesson = document.getElementById('lesson-template').content.cloneNode(true);
+    newLesson.querySelector('h3').textContent = `Lesson ${lessonCount}`;
+    document.getElementById('lessons-container').appendChild(newLesson);
+    
+    // Initialize Quill editors in the new lesson
+    newLesson.querySelectorAll('.quill-editor').forEach(editor => {
+        initQuillEditor(editor);
+    });
+});
+
+// Remove lesson
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.remove-lesson')) {
+        e.target.closest('.lesson-item').remove();
+        // Update lesson numbers
+        const lessons = document.querySelectorAll('.lesson-item');
+        lessons.forEach((lesson, index) => {
+            lesson.querySelector('h3').textContent = `Lesson ${index + 1}`;
+        });
+    }
+});
+
+// Add content block
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.add-content-block')) {
+        const button = e.target.closest('.add-content-block');
+        const type = button.dataset.type;
+        const template = document.getElementById(`${type}-block-template`);
+        const contentBlocks = button.closest('.lesson-item').querySelector('.content-blocks');
+        const newBlock = template.content.cloneNode(true);
+        contentBlocks.appendChild(newBlock);
+        
+        // Initialize Quill editor if it's a text block
+        const quillEditor = newBlock.querySelector('.quill-editor');
+        if (quillEditor) {
+            initQuillEditor(quillEditor);
+        }
+    }
+});
+
+// Remove content block
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.remove-content-block')) {
+        e.target.closest('.content-block').remove();
+    }
+});
+
+// Drag and drop functionality
+document.addEventListener('dragstart', function(e) {
+    if (e.target.closest('.content-block')) {
+        dragSrcEl = e.target.closest('.content-block');
+        e.target.classList.add('dragging');
+    }
+});
+
+document.addEventListener('dragend', function(e) {
+    if (e.target.closest('.content-block')) {
+        e.target.classList.remove('dragging');
+        dragSrcEl = null;
+    }
+});
+
+document.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    if (e.target.closest('.content-block')) {
+        e.target.closest('.content-block').classList.add('active');
+    }
+});
+
+document.addEventListener('dragleave', function(e) {
+    if (e.target.closest('.content-block')) {
+        e.target.closest('.content-block').classList.remove('active');
+    }
+});
+
+document.addEventListener('drop', function(e) {
+    e.preventDefault();
+    if (dragSrcEl && e.target.closest('.content-block')) {
+        const dropTarget = e.target.closest('.content-block');
+        const contentBlocks = dropTarget.parentElement;
+        
+        if (dragSrcEl !== dropTarget) {
+            const temp = contentBlocks.innerHTML;
+            contentBlocks.innerHTML = '';
+            contentBlocks.appendChild(dragSrcEl);
+            contentBlocks.appendChild(dropTarget);
+        }
+    }
+});
+
+// Handle file uploads
+function handleImageUpload(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = input.closest('.content-block').querySelector('.content-editor');
+            preview.innerHTML = `<img src="${e.target.result}" alt="" class="max-w-full h-auto rounded">`;
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function handleVideoEmbed(input) {
+    const embed = input.closest('.content-block').querySelector('.video-embed');
+    embed.innerHTML = input.value;
+}
+
+function handleFileUpload(input) {
+    if (input.files && input.files[0]) {
+        const preview = input.closest('.content-block').querySelector('.content-editor');
+        preview.innerHTML = `
+            <a href="#" target="_blank" class="flex items-center text-blue-600 hover:text-blue-800">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                ${input.files[0].name}
+            </a>
+        `;
+    }
+}
+</script>
+{% endblock %}
+{% endblock %} 
+manager/courses/4/lessons/

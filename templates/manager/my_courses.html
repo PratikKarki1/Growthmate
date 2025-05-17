@@ -1,0 +1,191 @@
+{% extends 'manager/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-100">
+    <!-- Main Content -->
+    <main class="ml-[250px] p-8">
+        <!-- Header Section -->
+        <div class="mb-8">
+            <h1 class="text-2xl font-bold text-gray-800">My Courses</h1>
+            <div class="mt-4 flex space-x-4">
+                <a href="{% url 'manager_courses' %}" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    Manage My Created Courses
+                </a>
+                <a href="{% url 'manager_available_courses' %}" class="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                    Browse Available Courses
+                </a>
+            </div>
+        </div>
+
+        <!-- Tabs for Created and Enrolled Courses -->
+        <div class="mb-6 border-b border-gray-200">
+            <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="myTab" role="tablist">
+                <li class="mr-2" role="presentation">
+                    <button class="inline-block p-4 border-b-2 rounded-t-lg hover:text-gray-600 hover:border-gray-300 active" 
+                            id="all-tab" 
+                            data-tab="all" 
+                            type="button" 
+                            role="tab" 
+                            aria-controls="all" 
+                            aria-selected="true">
+                        All Courses
+                    </button>
+                </li>
+                <li class="mr-2" role="presentation">
+                    <button class="inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300" 
+                            id="created-tab" 
+                            data-tab="created" 
+                            type="button" 
+                            role="tab" 
+                            aria-controls="created" 
+                            aria-selected="false">
+                        Created by Me
+                    </button>
+                </li>
+                <li class="mr-2" role="presentation">
+                    <button class="inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300" 
+                            id="enrolled-tab" 
+                            data-tab="enrolled" 
+                            type="button" 
+                            role="tab" 
+                            aria-controls="enrolled" 
+                            aria-selected="false">
+                        Enrolled Courses
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Courses Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="all-courses">
+            {% for course in courses %}
+            <div class="bg-white rounded-lg shadow overflow-hidden group course-card" data-type="{% if course.is_created_by_me %}created{% else %}enrolled{% endif %}">
+                <!-- Clickable area for course details -->
+                <div onclick="window.location.href='{% url 'course_details' course.id %}'" class="cursor-pointer">
+                    <!-- Course Image -->
+                    <div class="relative h-48">
+                        {% if course.thumbnail %}
+                            <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}" class="w-full h-full object-cover">
+                        {% else %}
+                            <img src="{% static 'assets/images/default_course.png' %}" alt="Default course image" class="w-full h-full object-cover">
+                        {% endif %}
+                        <div class="absolute top-4 right-4">
+                            <span class="px-3 py-1 bg-orange-500 text-white text-sm rounded-full">
+                                {{ course.level|title }}
+                            </span>
+                        </div>
+                        {% if course.is_created_by_me %}
+                        <div class="absolute top-4 left-4">
+                            <span class="px-3 py-1 bg-blue-500 text-white text-sm rounded-full">
+                                Created by Me
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Course Content -->
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ course.title }}</h3>
+                        <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ course.description }}</p>
+                        
+                        <!-- Course Info -->
+                        <div class="flex items-center justify-between text-sm text-gray-500 mb-4">
+                            <div class="flex items-center">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                {{ course.duration }} minutes
+                            </div>
+                            <div class="flex items-center">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                                {{ course.enrolled_students_count }} students
+                            </div>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="mb-4">
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600">Progress</span>
+                                <span class="text-orange-500">{{ course.user_completion_rate }}%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-orange-500 h-2 rounded-full transition-all duration-300" style="width: {{ course.user_completion_rate }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Button (Outside clickable area) -->
+                <div class="px-6 pb-6">
+                    {% if course.is_created_by_me %}
+                        <a href="{% url 'manage_lessons' course.id %}" class="block w-full text-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            Manage Lessons
+                        </a>
+                    {% else %}
+                        {% if course.user_completion_rate == 100 %}
+                            <a href="{% url 'course_details' course.id %}" class="block w-full text-center px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500">
+                                Relearn
+                            </a>
+                        {% else %}
+                            <a href="{% url 'continue_course' course.id %}" class="block w-full text-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                                Continue Learning
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full text-center py-12">
+                <div class="text-gray-500">
+                    <svg class="mx-auto h-12 w-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                    </svg>
+                    <p class="text-lg">You haven't enrolled in any courses yet.</p>
+                    <a href="{% url 'manager_available_courses' %}" class="mt-4 inline-block text-orange-500 hover:text-orange-600">
+                        Browse Available Courses
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+</div>
+
+<!-- JavaScript for tab functionality -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabs = document.querySelectorAll('[data-tab]');
+        const courseCards = document.querySelectorAll('.course-card');
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Remove active class from all tabs
+                tabs.forEach(t => {
+                    t.classList.remove('active', 'border-orange-500', 'text-orange-500');
+                    t.classList.add('border-transparent');
+                });
+                
+                // Add active class to clicked tab
+                this.classList.add('active', 'border-orange-500', 'text-orange-500');
+                this.classList.remove('border-transparent');
+                
+                const tabType = this.getAttribute('data-tab');
+                
+                // Show/hide courses based on tab
+                courseCards.forEach(card => {
+                    if (tabType === 'all') {
+                        card.style.display = 'block';
+                    } else if (tabType === card.getAttribute('data-type')) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        });
+    });
+</script>
+{% endblock %} 

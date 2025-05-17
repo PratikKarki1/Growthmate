@@ -1,0 +1,123 @@
+{% load static %}
+<!-- Sidebar -->
+<aside class="fixed inset-y-0 left-0 w-64 bg-white shadow-lg flex flex-col">
+    <div class="flex items-center justify-center h-16 border-b">
+        <a href="{% url 'home' %}" class="text-xl font-bold text-gray-800 flex items-center">
+            <span class="text-orange-600">Growth</span>
+            <span class="text-gray-600">Mate</span>
+        </a>
+    </div>
+    
+    <!-- User Profile Section -->
+    <nav class="flex-1">
+        <div class="px-4 py-2">
+            <div class="flex items-center space-x-3">
+                <img src="{{ user_profile.profile_pic.url|default:'/static/assets/images/default_profile.jpg' }}" alt="Profile" class="w-10 h-10 rounded-full">
+                <div>
+                    <p class="text-sm font-semibold text-gray-700">{{ request.user.get_full_name }}</p>
+                    <p class="text-xs text-gray-500">{{ user_profile.role|title }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation Links -->
+        <ul class="mt-6 space-y-1">
+            <!-- Manager Dashboard -->
+            <li class="px-4 py-2 {% if request.resolver_match.url_name == 'manager_dashboard' %}bg-orange-50{% endif %}">
+                <a href="{% url 'manager_dashboard' %}" class="flex items-center {% if request.resolver_match.url_name == 'manager_dashboard' %}text-orange-600{% else %}text-gray-600 hover:text-orange-600{% endif %}">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                    </svg>
+                    Manager Dashboard
+                </a>
+            </li>
+
+            <!-- Users -->
+            <li class="px-4 py-2 {% if request.resolver_match.url_name == 'manager_users' %}bg-orange-50{% endif %}">
+                <a href="{% url 'manager_users' %}" class="flex items-center {% if request.resolver_match.url_name == 'manager_users' %}text-orange-600{% else %}text-gray-600 hover:text-orange-600{% endif %}">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                    Users
+                </a>
+            </li>
+
+            <!-- Courses -->
+            <li class="px-4 py-2 {% if request.resolver_match.url_name == 'manager_courses' %}bg-orange-50{% endif %}">
+                <a href="{% url 'manager_courses' %}" class="flex items-center {% if request.resolver_match.url_name == 'manager_courses' %}text-orange-600{% else %}text-gray-600 hover:text-orange-600{% endif %}">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                    </svg>
+                    Courses
+                </a>
+            </li>
+
+            <!-- My Courses -->
+            <li class="px-4 py-2 {% if request.resolver_match.url_name == 'my_courses' %}bg-orange-50{% endif %}">
+                <a href="{% url 'my_courses' %}" class="flex items-center {% if request.resolver_match.url_name == 'my_courses' %}text-orange-600{% else %}text-gray-600 hover:text-orange-600{% endif %}">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
+                    </svg>
+                    My Courses
+                </a>
+            </li>
+
+            <!-- Profile Settings -->
+            <li class="px-4 py-2 {% if request.resolver_match.url_name == 'profile_settings' %}bg-orange-50{% endif %}">
+                <a href="{% url 'profile_settings' %}" class="flex items-center {% if request.resolver_match.url_name == 'profile_settings' %}text-orange-600{% else %}text-gray-600 hover:text-orange-600{% endif %}">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    Profile Settings
+                </a>
+            </li>
+
+            <!-- Logout -->
+            <div class="px-4 py-2 border-t">
+                <a href="#" 
+                   onclick="confirmLogout(event)" 
+                   class="flex items-center space-x-3 text-red-600 hover:text-red-700">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </ul>
+    </nav>
+</aside>
+
+<!-- Logout Confirmation Modal -->
+<div id="logoutModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Confirm Logout</h3>
+        <p class="text-gray-600 mb-6">Are you sure you want to logout?</p>
+        <div class="flex justify-end space-x-3">
+            <button onclick="closeLogoutModal()" class="px-4 py-2 text-gray-700 hover:text-gray-900">
+                Cancel
+            </button>
+            <a href="{% url 'logout' %}" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+                Logout
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmLogout(event) {
+    event.preventDefault();
+    document.getElementById('logoutModal').classList.remove('hidden');
+    document.getElementById('logoutModal').classList.add('flex');
+}
+
+function closeLogoutModal() {
+    document.getElementById('logoutModal').classList.add('hidden');
+    document.getElementById('logoutModal').classList.remove('flex');
+}
+
+// Close modal when clicking outside
+document.getElementById('logoutModal').addEventListener('click', function(event) {
+    if (event.target === this) {
+        closeLogoutModal();
+    }
+});
+</script> 

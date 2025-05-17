@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="flex flex-col md:flex-row justify-center items-center min-h-screen bg-gray-50">
+    <div class="w-full md:w-1/2 p-8">
+        <h2 class="text-2xl font-bold mb-4">let's connect and collaborate.</h2>
+        <p class="mb-6">We care for our customers, so feel free to reach out to us anytime and</p>
+        <div class="mb-4 flex items-center">
+            <span class="mr-2">📧</span>
+            <span>Email: growth.mate01@gmail.com</span>
+        </div>
+        <div class="mb-4 flex items-center">
+            <span class="mr-2">📞</span>
+            <span>Phone No.: +61 430 981 166</span>
+        </div>
+        <div class="mb-4 flex items-center">
+            <span class="mr-2">⏰</span>
+            <span>Hours: 09:00 am – 07:30 pm</span>
+        </div>
+    </div>
+    <div class="w-full md:w-1/2 p-8 bg-white rounded-lg shadow">
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <input type="text" name="name" placeholder="Your Full Name" required
+                    class="w-full border rounded px-3 py-2" />
+            </div>
+            <div>
+                <input type="email" name="email" placeholder="Your Email Address" required
+                    class="w-full border rounded px-3 py-2" />
+            </div>
+            <div>
+                <input type="text" name="phone" placeholder="Your Phone Number"
+                    class="w-full border rounded px-3 py-2" />
+            </div>
+            <div>
+                <input type="text" name="company" placeholder="Company Name" class="w-full border rounded px-3 py-2" />
+            </div>
+            <div>
+                <textarea name="message" placeholder="Your Message" required
+                    class="w-full border rounded px-3 py-2"></textarea>
+            </div>
+            <button type="submit"
+                class="w-full bg-gradient-to-r from-orange-400 to-orange-600 text-white py-2 rounded">Send</button>
+        </form>
+        {% if messages %}
+        <ul class="mt-4">
+            {% for message in messages %}
+            <li class="text-green-600">{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-100">
+    {% include 'includes/sidebar.html' %}
+
+    <!-- Main Content -->
+    <main class="ml-64 p-8">
+        <!-- Header Section -->
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">Courses</h1>
+                <p class="text-gray-600">
+                    {% if user_profile.role == 'admin' %}
+                    Manage all courses in the system
+                    {% elif user_profile.role == 'manager' %}
+                    Manage your courses and view admin courses
+                    {% else %}
+                    Browse available courses
+                    {% endif %}
+                </p>
+            </div>
+            {% if user_profile.role in 'admin,manager' %}
+            <a href="{% url 'create_course' %}" class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Create Course
+            </a>
+            {% endif %}
+        </div>
+
+        <!-- Search and Filter Section -->
+        <div class="bg-white rounded-lg p-6 mb-8">
+            <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                <div class="relative w-full md:w-96">
+                    <form method="GET" action="{% url 'courses_list' %}" class="flex items-center">
+                        <input type="text" 
+                               name="search"
+                               placeholder="Search courses..." 
+                               value="{{ search_query }}"
+                               class="w-full px-4 py-2 pl-10 pr-4 text-gray-700 bg-gray-100 border rounded-lg focus:outline-none focus:border-orange-400">
+                        <button type="submit" class="absolute left-3 top-1/2 transform -translate-y-1/2">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Courses Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for course in courses %}
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <img src="{{ course.image.url }}" alt="{{ course.title }}" class="w-full h-48 object-cover">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="px-2 py-1 text-xs font-semibold {% if course.difficulty_level == 'beginner' %}bg-green-100 text-green-800{% elif course.difficulty_level == 'intermediate' %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %} rounded-full">
+                            {{ course.difficulty_level|title }}
+                        </span>
+                        <span class="text-sm text-gray-500">{{ course.duration }}</span>
+                    </div>
+                    
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ course.title }}</h3>
+                    <p class="text-gray-600 text-sm mb-4">{{ course.description|truncatewords:20 }}</p>
+                    
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center">
+                            <img src="{{ course.uploaded_by.userprofile.profile_pic.url|default:'https://ui-avatars.com/api/?name='|add:course.uploaded_by.get_full_name|urlencode }}" 
+                                 alt="{{ course.uploaded_by.get_full_name }}" 
+                                 class="w-8 h-8 rounded-full mr-2">
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">{{ course.uploaded_by.get_full_name }}</p>
+                                <p class="text-xs text-gray-500">{{ course.uploaded_by.userprofile.role|title }}</p>
+                            </div>
+                        </div>
+                        {% if course.student_limit %}
+                        <span class="text-sm text-gray-500">
+                            {{ course.enrollment_set.count }}/{{ course.student_limit }} students
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="flex space-x-2">
+                        {% if user_profile.role == 'employee' and not course.enrollment_set.filter(user=request.user).exists %}
+                        <button onclick="enrollCourse({{ course.id }})" class="flex-1 bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 text-center">
+                            Enroll Now
+                        </button>
+                        {% endif %}
+                        
+                        <a href="{% url 'view_course' course.id %}" class="flex-1 bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 text-center">
+                            {% if course.enrollment_set.filter(user=request.user).exists %}
+                            Continue Learning
+                            {% elif user_profile.role in 'admin,manager' %}
+                            Manage Course
+                            {% else %}
+                            View Details
+                            {% endif %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full text-center py-12">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">No courses found</h3>
+                <p class="mt-1 text-sm text-gray-500">
+                    {% if search_query %}
+                    No courses match your search criteria.
+                    {% else %}
+                    {% if user_profile.role in 'admin,manager' %}
+                    Get started by creating your first course.
+                    {% else %}
+                    No courses are available at the moment.
+                    {% endif %}
+                    {% endif %}
+                </p>
+                {% if user_profile.role in 'admin,manager' and not search_query %}
+                <div class="mt-6">
+                    <a href="{% url 'create_course' %}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-orange-500 hover:bg-orange-600">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Create Course
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if courses.has_other_pages %}
+        <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 mt-8 rounded-lg">
+            <div class="flex-1 flex justify-between sm:hidden">
+                {% if courses.has_previous %}
+                <a href="?page={{ courses.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Previous
+                </a>
+                {% endif %}
+                {% if courses.has_next %}
+                <a href="?page={{ courses.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Next
+                </a>
+                {% endif %}
+            </div>
+            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                    <p class="text-sm text-gray-700">
+                        Showing
+                        <span class="font-medium">{{ courses.start_index }}</span>
+                        to
+                        <span class="font-medium">{{ courses.end_index }}</span>
+                        of
+                        <span class="font-medium">{{ courses.paginator.count }}</span>
+                        results
+                    </p>
+                </div>
+                <div>
+                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                        {% if courses.has_previous %}
+                        <a href="?page={{ courses.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            <span class="sr-only">Previous</span>
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </a>
+                        {% endif %}
+
+                        {% for num in courses.paginator.page_range %}
+                            {% if courses.number == num %}
+                            <span class="relative inline-flex items-center px-4 py-2 border border-orange-500 bg-orange-50 text-sm font-medium text-orange-600">
+                                {{ num }}
+                            </span>
+                            {% elif num > courses.number|add:'-3' and num < courses.number|add:'3' %}
+                            <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                {{ num }}
+                            </a>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if courses.has_next %}
+                        <a href="?page={{ courses.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            <span class="sr-only">Next</span>
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </a>
+                        {% endif %}
+                    </nav>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function enrollCourse(courseId) {
+    if (!confirm('Are you sure you want to enroll in this course?')) {
+        return;
+    }
+    
+    fetch(`/employee/courses/${courseId}/enroll/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            window.location.reload();
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while enrolling in the course.');
+    });
+}
+</script>
+{% endblock %} 

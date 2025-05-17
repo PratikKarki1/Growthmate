@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-100">
+    {% include 'includes/sidebar.html' %}
+
+    <!-- Main Content -->
+    <main class="ml-64 p-8">
+        <div class="mb-8">
+            <a href="javascript:history.back()" class="text-gray-600 hover:text-gray-800">
+                <svg class="w-6 h-6 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+            </a>
+        </div>
+
+        <h1 class="text-2xl font-bold text-gray-800 mb-8">{{ course.id|yesno:"Edit,Create" }} Course</h1>
+
+        <form id="courseForm" method="POST" enctype="multipart/form-data" class="space-y-8">
+            {% csrf_token %}
+
+            <!-- Course Details Section -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold text-gray-800 mb-6">Course Details</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Course Title -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" for="title">
+                            Course Title
+                        </label>
+                        <input type="text" id="title" name="title" required
+                            value="{{ course.title|default:'' }}"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            placeholder="Enter course title">
+                        <div class="text-xs text-gray-500 mt-1">0/100</div>
+                    </div>
+
+                    <!-- Difficulty Level -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" for="difficulty_level">
+                            Difficulty Level
+                        </label>
+                        <select id="difficulty_level" name="difficulty_level" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            <option value="beginner" {% if course.difficulty_level == 'beginner' %}selected{% endif %}>Beginner</option>
+                            <option value="intermediate" {% if course.difficulty_level == 'intermediate' %}selected{% endif %}>Intermediate</option>
+                            <option value="advanced" {% if course.difficulty_level == 'advanced' %}selected{% endif %}>Advanced</option>
+                        </select>
+                    </div>
+
+                    <!-- Category -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" for="category">
+                            Category
+                        </label>
+                        <select id="category" name="category" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            <option value="development" {% if course.category == 'development' %}selected{% endif %}>Development</option>
+                            <option value="business" {% if course.category == 'business' %}selected{% endif %}>Business</option>
+                            <option value="design" {% if course.category == 'design' %}selected{% endif %}>Design</option>
+                            <option value="marketing" {% if course.category == 'marketing' %}selected{% endif %}>Marketing</option>
+                        </select>
+                    </div>
+
+                    <!-- Tags -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" for="tags">
+                            Tags
+                        </label>
+                        <input type="text" id="tags" name="tags"
+                            value="{{ course.tags|default:'' }}"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            placeholder="Add tags separated by commas">
+                    </div>
+
+                    <!-- Description -->
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2" for="description">
+                            Description
+                        </label>
+                        <textarea id="description" name="description" rows="4" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            placeholder="Write a detailed description of your course">{{ course.description|default:'' }}</textarea>
+                    </div>
+
+                    <!-- Course Language -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" for="course_language">
+                            Course Language
+                        </label>
+                        <select id="course_language" name="course_language" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            <option value="English" {% if course.course_language == 'English' %}selected{% endif %}>English</option>
+                            <option value="Spanish" {% if course.course_language == 'Spanish' %}selected{% endif %}>Spanish</option>
+                            <option value="French" {% if course.course_language == 'French' %}selected{% endif %}>French</option>
+                        </select>
+                    </div>
+
+                    <!-- Course Duration -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" for="duration">
+                            Course Duration
+                        </label>
+                        <input type="text" id="duration" name="duration" required
+                            value="{{ course.duration|default:'' }}"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            placeholder="e.g. 6 weeks, 12 hours">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Course Thumbnail -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold text-gray-800 mb-6">Course Thumbnail</h2>
+                
+                <div class="flex items-center justify-center w-full">
+                    <label class="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                        <div class="flex flex-col items-center justify-center pt-5 pb-6" id="upload-placeholder">
+                            <svg class="w-8 h-8 mb-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                            </svg>
+                            <p class="mb-2 text-sm text-gray-500">
+                                <span class="font-semibold">Click to upload</span> or drag and drop
+                            </p>
+                            <p class="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                        </div>
+                        <div id="image-preview" class="hidden w-full h-full">
+                            <img id="preview" src="{{ course.image.url|default:'#' }}" class="w-full h-full object-cover rounded-lg">
+                        </div>
+                        <input id="image" name="image" type="file" class="hidden" accept="image/*" />
+                    </label>
+                </div>
+            </div>
+
+            <!-- Publishing Settings -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold text-gray-800 mb-6">Publishing Settings</h2>
+                
+                <div class="space-y-4">
+                    <!-- Visibility -->
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <label class="text-sm font-medium text-gray-700">Visibility</label>
+                            <p class="text-sm text-gray-500">Make course visible to students</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="is_active" class="sr-only peer" {% if course.is_active %}checked{% endif %}>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                        </label>
+                    </div>
+
+                    <!-- Enable Comments -->
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <label class="text-sm font-medium text-gray-700">Enable Comments</label>
+                            <p class="text-sm text-gray-500">Allow students to comment on lessons</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="enable_comments" class="sr-only peer" {% if course.enable_comments %}checked{% endif %}>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                        </label>
+                    </div>
+
+                    <!-- Schedule Publication -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" for="due_date">
+                            Schedule Publication
+                        </label>
+                        <input type="date" id="due_date" name="due_date" required
+                            value="{{ course.due_date|date:'Y-m-d'|default:'' }}"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                    </div>
+
+                    <!-- Student Limit -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" for="student_limit">
+                            Student Limit
+                        </label>
+                        <input type="number" id="student_limit" name="student_limit"
+                            value="{{ course.student_limit|default:'' }}"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            placeholder="Maximum number of students (optional)">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex justify-end space-x-4">
+                <button type="button" onclick="history.back()" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button type="submit" class="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600">
+                    {{ course.id|yesno:"Update,Create" }} Course
+                </button>
+            </div>
+        </form>
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('image').onchange = function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('preview').src = e.target.result;
+            document.getElementById('upload-placeholder').classList.add('hidden');
+            document.getElementById('image-preview').classList.remove('hidden');
+        }
+        reader.readAsDataURL(file);
+    }
+};
+
+// Show existing image if available
+window.onload = function() {
+    const previewImg = document.getElementById('preview');
+    if (previewImg.src && previewImg.src !== window.location.href) {
+        document.getElementById('upload-placeholder').classList.add('hidden');
+        document.getElementById('image-preview').classList.remove('hidden');
+    }
+};
+
+// Character counter for title
+document.getElementById('title').addEventListener('input', function(e) {
+    const count = e.target.value.length;
+    e.target.nextElementSibling.textContent = `${count}/100`;
+});
+</script>
+{% endblock %} 

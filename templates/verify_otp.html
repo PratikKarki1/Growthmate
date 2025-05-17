@@ -1,0 +1,70 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify OTP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        function resendOTP() {
+            fetch("{% url 'resend_otp' %}", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}",
+                    "Content-Type": "application/json"
+                },
+            })
+                .then(response => response.json())
+                .then(data => {
+                    let messageBox = document.getElementById("message-box");
+                    if (data.success) {
+                        messageBox.innerHTML = `<p class="text-green-600">${data.message}</p>`;
+                    } else {
+                        messageBox.innerHTML = `<p class="text-red-600">${data.message}</p>`;
+                    }
+                })
+                .catch(error => console.error("Error:", error));
+        }
+    </script>
+</head>
+
+<body class="flex items-center justify-center min-h-screen bg-gray-100">
+    <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
+        <div class="text-center">
+            <img src="{% static 'images/logo.png' %}" alt="GrowthMate Logo" class="mx-auto h-10">
+        </div>
+        <h2 class="text-2xl font-bold text-center text-gray-700">Email Verification</h2>
+        <p class="text-sm text-center text-gray-500">Enter the OTP sent to your email</p>
+
+        <div id="message-box"></div>
+
+        <form method="POST" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label for="otp" class="block text-sm font-medium text-gray-700">Enter OTP</label>
+                <input type="text" name="otp" placeholder="Enter OTP" required
+                    class="w-full px-4 py-2 mt-1 border rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 text-center tracking-widest">
+            </div>
+            <button type="submit"
+                class="w-full px-4 py-2 font-semibold text-white bg-orange-500 rounded-md hover:bg-orange-600">Verify</button>
+        </form>
+
+        <p class="text-sm text-center text-gray-600 mt-4">
+            Didn't receive an OTP? <button onclick="resendOTP()" class="text-orange-500 hover:underline">Resend
+                OTP</button>
+        </p>
+    </div>
+
+    <footer class="absolute bottom-4 w-full text-center text-gray-500 text-sm">
+        <div class="flex justify-center space-x-4">
+            <a href="#" class="hover:underline">Privacy Policy</a>
+            <a href="#" class="hover:underline">Terms of Service</a>
+            <a href="#" class="hover:underline">Help</a>
+        </div>
+        <p class="mt-2">GrowthMate | D-BST Solutions © 2025</p>
+    </footer>
+</body>
+
+</html>

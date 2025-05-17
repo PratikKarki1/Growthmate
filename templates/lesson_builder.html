@@ -1,0 +1,433 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<style>
+.content-block {
+    transition: all 0.3s ease;
+}
+.content-block.dragging {
+    opacity: 0.5;
+    transform: scale(0.95);
+}
+.drop-zone {
+    border: 2px dashed #e5e7eb;
+    min-height: 100px;
+    transition: all 0.3s ease;
+}
+.drop-zone.active {
+    border-color: #f97316;
+    background-color: #fff7ed;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-100">
+    {% include 'includes/sidebar.html' %}
+
+    <!-- Main Content -->
+    <main class="ml-64 p-8">
+        <div class="mb-8">
+            <a href="javascript:history.back()" class="text-gray-600 hover:text-gray-800">
+                <svg class="w-6 h-6 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+            </a>
+        </div>
+
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-2xl font-bold text-gray-800">{{ section.id|yesno:"Edit,Create" }} Lesson</h1>
+            <button type="button" onclick="saveLesson()" class="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600">
+                Save Lesson
+            </button>
+        </div>
+
+        <form id="lessonForm" class="space-y-8">
+            {% csrf_token %}
+            
+            <!-- Lesson Details -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" for="title">
+                            Lesson Title
+                        </label>
+                        <input type="text" id="title" name="title" required
+                            value="{{ lesson.title|default:'' }}"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2" for="duration">
+                            Duration (minutes)
+                        </label>
+                        <input type="number" id="duration" name="duration" required
+                            value="{{ lesson.duration|default:'' }}"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Builder -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-lg font-semibold text-gray-800">Content Blocks</h2>
+                    <div class="flex space-x-4">
+                        <button type="button" onclick="addContentBlock('text')" class="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            Text
+                        </button>
+                        <button type="button" onclick="addContentBlock('image')" class="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            Image
+                        </button>
+                        <button type="button" onclick="addContentBlock('video')" class="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                            Video
+                        </button>
+                        <button type="button" onclick="addContentBlock('file')" class="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                            </svg>
+                            File
+                        </button>
+                    </div>
+                </div>
+
+                <div id="contentBlocks" class="space-y-4">
+                    <!-- Content blocks will be added here -->
+                    {% for block in lesson.content_blocks.all %}
+                    <div class="content-block bg-gray-50 p-4 rounded-lg" draggable="true" data-type="{{ block.content_type }}" data-id="{{ block.id }}">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="flex items-center">
+                                <button type="button" class="drag-handle mr-2 text-gray-400 hover:text-gray-600">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                                    </svg>
+                                </button>
+                                <span class="font-medium text-gray-700">{{ block.get_content_type_display }}</span>
+                            </div>
+                            <button type="button" onclick="removeContentBlock(this)" class="text-gray-400 hover:text-red-500">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="content-editor">
+                            {% if block.content_type == 'text' %}
+                            <div class="quill-editor">{{ block.content|safe }}</div>
+                            {% elif block.content_type == 'image' %}
+                            <div class="image-preview">
+                                <img src="{{ block.file.url }}" alt="" class="max-w-full h-auto rounded">
+                            </div>
+                            {% elif block.content_type == 'video' %}
+                            <div class="video-embed">
+                                {{ block.content|safe }}
+                            </div>
+                            {% elif block.content_type == 'file' %}
+                            <div class="file-preview">
+                                <a href="{{ block.file.url }}" target="_blank" class="flex items-center text-blue-600 hover:text-blue-800">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
+                                    {{ block.file.name|split:'/'|last }}
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </form>
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+<script>
+let quillEditors = [];
+let dragSrcEl = null;
+
+function initQuillEditor(container) {
+    const editor = new Quill(container, {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                ['bold', 'italic', 'underline', 'strike'],
+                ['blockquote', 'code-block'],
+                [{ 'header': 1 }, { 'header': 2 }],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                [{ 'script': 'sub'}, { 'script': 'super' }],
+                [{ 'indent': '-1'}, { 'indent': '+1' }],
+                [{ 'direction': 'rtl' }],
+                [{ 'size': ['small', false, 'large', 'huge'] }],
+                [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                [{ 'color': [] }, { 'background': [] }],
+                [{ 'font': [] }],
+                [{ 'align': [] }],
+                ['clean']
+            ]
+        }
+    });
+    quillEditors.push(editor);
+    return editor;
+}
+
+function addContentBlock(type) {
+    const template = `
+        <div class="content-block bg-gray-50 p-4 rounded-lg" draggable="true" data-type="${type}">
+            <div class="flex justify-between items-start mb-4">
+                <div class="flex items-center">
+                    <button type="button" class="drag-handle mr-2 text-gray-400 hover:text-gray-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                    <span class="font-medium text-gray-700">${type.charAt(0).toUpperCase() + type.slice(1)}</span>
+                </div>
+                <button type="button" onclick="removeContentBlock(this)" class="text-gray-400 hover:text-red-500">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="content-editor">
+                ${getContentEditorTemplate(type)}
+            </div>
+        </div>
+    `;
+
+    const contentBlocks = document.getElementById('contentBlocks');
+    contentBlocks.insertAdjacentHTML('beforeend', template);
+
+    const newBlock = contentBlocks.lastElementChild;
+    initializeContentBlock(newBlock);
+}
+
+function getContentEditorTemplate(type) {
+    switch (type) {
+        case 'text':
+            return '<div class="quill-editor"></div>';
+        case 'image':
+            return `
+                <div class="image-upload">
+                    <input type="file" accept="image/*" class="hidden" onchange="handleImageUpload(this)">
+                    <div class="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50" onclick="this.previousElementSibling.click()">
+                        <div class="text-center">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            <p class="mt-1 text-sm text-gray-600">Click to upload image</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        case 'video':
+            return `
+                <div class="video-embed">
+                    <input type="text" placeholder="Paste video embed code or URL" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" onchange="handleVideoEmbed(this)">
+                </div>
+            `;
+        case 'file':
+            return `
+                <div class="file-upload">
+                    <input type="file" class="hidden" onchange="handleFileUpload(this)">
+                    <div class="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50" onclick="this.previousElementSibling.click()">
+                        <div class="text-center">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                            </svg>
+                            <p class="mt-1 text-sm text-gray-600">Click to upload file</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        default:
+            return '';
+    }
+}
+
+function initializeContentBlock(block) {
+    const type = block.dataset.type;
+    if (type === 'text') {
+        const editorContainer = block.querySelector('.quill-editor');
+        initQuillEditor(editorContainer);
+    }
+
+    // Initialize drag and drop
+    block.addEventListener('dragstart', handleDragStart);
+    block.addEventListener('dragend', handleDragEnd);
+    block.addEventListener('dragover', handleDragOver);
+    block.addEventListener('drop', handleDrop);
+}
+
+function handleDragStart(e) {
+    dragSrcEl = this;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', this.outerHTML);
+    this.classList.add('dragging');
+}
+
+function handleDragEnd(e) {
+    this.classList.remove('dragging');
+    document.querySelectorAll('.content-block').forEach(block => {
+        block.classList.remove('drop-zone', 'active');
+    });
+}
+
+function handleDragOver(e) {
+    if (e.preventDefault) {
+        e.preventDefault();
+    }
+    this.classList.add('drop-zone', 'active');
+    e.dataTransfer.dropEffect = 'move';
+    return false;
+}
+
+function handleDrop(e) {
+    if (e.stopPropagation) {
+        e.stopPropagation();
+    }
+
+    if (dragSrcEl !== this) {
+        dragSrcEl.outerHTML = this.outerHTML;
+        this.outerHTML = e.dataTransfer.getData('text/html');
+        initializeAllContentBlocks();
+    }
+
+    return false;
+}
+
+function initializeAllContentBlocks() {
+    document.querySelectorAll('.content-block').forEach(block => {
+        initializeContentBlock(block);
+    });
+}
+
+function removeContentBlock(button) {
+    if (confirm('Are you sure you want to remove this content block?')) {
+        const block = button.closest('.content-block');
+        block.remove();
+    }
+}
+
+function handleImageUpload(input) {
+    const file = input.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.createElement('img');
+            preview.src = e.target.result;
+            preview.className = 'max-w-full h-auto rounded';
+            input.parentElement.innerHTML = '';
+            input.parentElement.appendChild(preview);
+        }
+        reader.readAsDataURL(file);
+    }
+}
+
+function handleVideoEmbed(input) {
+    const url = input.value.trim();
+    if (url) {
+        // Convert URL to embed code if needed
+        let embedCode = url;
+        if (url.includes('youtube.com') || url.includes('youtu.be')) {
+            const videoId = url.split('v=')[1] || url.split('/').pop();
+            embedCode = `<iframe width="100%" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+        }
+        input.parentElement.innerHTML = embedCode;
+    }
+}
+
+function handleFileUpload(input) {
+    const file = input.files[0];
+    if (file) {
+        const preview = document.createElement('div');
+        preview.className = 'flex items-center text-blue-600 hover:text-blue-800';
+        preview.innerHTML = `
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            ${file.name}
+        `;
+        input.parentElement.innerHTML = '';
+        input.parentElement.appendChild(preview);
+    }
+}
+
+function saveLesson() {
+    const form = document.getElementById('lessonForm');
+    const formData = new FormData(form);
+
+    // Add content blocks data
+    const blocks = [];
+    document.querySelectorAll('.content-block').forEach((block, index) => {
+        const type = block.dataset.type;
+        let content = '';
+        let file = null;
+
+        switch (type) {
+            case 'text':
+                const editor = quillEditors.find(e => e.container.closest('.content-block') === block);
+                content = editor.root.innerHTML;
+                break;
+            case 'image':
+            case 'file':
+                const fileInput = block.querySelector('input[type="file"]');
+                if (fileInput && fileInput.files[0]) {
+                    file = fileInput.files[0];
+                    formData.append(`block_${index}_file`, file);
+                }
+                break;
+            case 'video':
+                content = block.querySelector('.video-embed').innerHTML;
+                break;
+        }
+
+        blocks.push({
+            type,
+            content,
+            order: index
+        });
+    });
+
+    formData.append('blocks', JSON.stringify(blocks));
+
+    // Submit form
+    fetch('{% url "save_lesson" section.id %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Lesson saved successfully!');
+            window.location.href = data.redirect_url;
+        } else {
+            alert(data.message || 'Error saving lesson');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while saving the lesson');
+    });
+}
+
+// Initialize all content blocks on page load
+document.addEventListener('DOMContentLoaded', function() {
+    initializeAllContentBlocks();
+});
+</script>
+{% endblock %} 

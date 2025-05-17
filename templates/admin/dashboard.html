@@ -1,0 +1,145 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block admin_content %}
+<!-- Welcome Section -->
+<div class="mb-8">
+    <h1 class="text-2xl font-semibold text-gray-800">Welcome Back, {{ user.get_full_name }}!</h1>
+    <p class="text-gray-600">Here's what's happening with your platform</p>
+</div>
+
+<!-- Stats Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Total Users -->
+    <div class="bg-white rounded-lg p-6 shadow-sm">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-gray-500 mb-2">Total Users</h3>
+                <p class="text-2xl font-semibold">{{ total_users }}</p>
+                <p class="text-green-500 text-sm mt-2">
+                    <i class="fas fa-arrow-up mr-1"></i>
+                    +{{ user_growth }} new this month
+                </p>
+            </div>
+            <div class="bg-orange-100 p-3 rounded-lg">
+                <i class="fas fa-users text-orange-500 text-xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Managers -->
+    <div class="bg-white rounded-lg p-6 shadow-sm">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-gray-500 mb-2">Active Managers</h3>
+                <p class="text-2xl font-semibold">{{ active_managers }}</p>
+                <p class="text-gray-500 text-sm mt-2">
+                    Managing platform courses
+                </p>
+            </div>
+            <div class="bg-green-100 p-3 rounded-lg">
+                <i class="fas fa-user-tie text-green-500 text-xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Course Stats -->
+    <div class="bg-white rounded-lg p-6 shadow-sm">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-gray-500 mb-2">Total Courses</h3>
+                <p class="text-2xl font-semibold">{{ total_courses }}</p>
+                <p class="text-green-500 text-sm mt-2">
+                    <i class="fas fa-arrow-up mr-1"></i>
+                    +{{ course_growth }} new this month
+                </p>
+            </div>
+            <div class="bg-blue-100 p-3 rounded-lg">
+                <i class="fas fa-graduation-cap text-blue-500 text-xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Course Completion -->
+    <div class="bg-white rounded-lg p-6 shadow-sm">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-gray-500 mb-2">Course Completion</h3>
+                <p class="text-2xl font-semibold">{{ course_completion_rate|floatformat:1 }}%</p>
+                <p class="text-gray-500 text-sm mt-2">
+                    Average completion rate
+                </p>
+            </div>
+            <div class="bg-yellow-100 p-3 rounded-lg">
+                <i class="fas fa-chart-line text-yellow-500 text-xl"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Popular Courses & Recent Activities -->
+<div class="grid grid-cols-1 gap-6 mb-8">
+    <!-- Course Status -->
+    <div class="bg-white rounded-lg p-6 shadow-sm">
+        <h3 class="text-lg font-semibold mb-4">Course Status</h3>
+        <div class="space-y-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <span class="text-gray-600">Active Courses</span>
+                </div>
+                <span class="text-gray-500">{{ active_courses }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <span class="text-gray-600">Featured Courses</span>
+                </div>
+                <span class="text-gray-500">{{ featured_courses }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <span class="text-gray-600">Total Courses</span>
+                </div>
+                <span class="text-gray-500">{{ total_courses }}</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Latest Users -->
+<div class="bg-white rounded-lg p-6 shadow-sm">
+    <div class="flex justify-between items-center mb-6">
+        <h3 class="text-lg font-semibold">Latest Users</h3>
+        <a href="{% url 'admin_users' %}" class="text-orange-500 hover:text-orange-600">View All</a>
+    </div>
+    <div class="space-y-6">
+        {% for user_profile in latest_users %}
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                    {% if user_profile.profile_picture %}
+                    <img src="{{ user_profile.profile_picture.url }}" alt="{{ user_profile.user.get_full_name }}"
+                        class="w-10 h-10 rounded-full object-cover">
+                    {% else %}
+                    <span class="text-gray-600">{{ user_profile.user.get_initials }}</span>
+                    {% endif %}
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-gray-900">{{ user_profile.user.get_full_name }}</p>
+                    <p class="text-xs text-gray-500">{{ user_profile.role|title }}</p>
+                </div>
+            </div>
+            <div class="flex items-center">
+                <span
+                    class="px-3 py-1 text-xs rounded-full {% if user_profile.user.is_active %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                    {{ user_profile.user.is_active|yesno:"Active,Inactive" }}
+                </span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends 'employee/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 mt-20">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header Section -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Available Courses</h1>
+            <p class="mt-2 text-gray-600">Browse and enroll in new courses</p>
+        </div>
+
+        <!-- Courses Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for course in courses %}
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <!-- Course Image -->
+                <div class="relative h-48">
+                    {% if course.image %}
+                        <img src="{{ course.image.url }}" alt="{{ course.title }}" class="w-full h-full object-cover">
+                    {% else %}
+                        <img src="{% static 'assets/images/default_course.png' %}" alt="{{ course.title }}" class="w-full h-full object-cover">
+                    {% endif %}
+                </div>
+
+                <!-- Course Content -->
+                <div class="p-6">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ course.title }}</h3>
+                    <p class="text-gray-600 mb-4">{{ course.about_this_course|truncatewords:20 }}</p>
+                    
+                    <!-- Course Details -->
+                    <div class="flex items-center justify-between text-sm text-gray-500 mb-4">
+                        <span><i class="fas fa-clock mr-1"></i> {{ course.duration }}</span>
+                        <span><i class="fas fa-calendar mr-1"></i> Due: {{ course.due_date|date:"M d, Y" }}</span>
+                    </div>
+
+                    <!-- Action Button -->
+                    <form method="post" action="{% url 'enroll_course' course.id %}">
+                        {% csrf_token %}
+                        <button type="submit" 
+                                class="block w-full text-center bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-orange-600 transition-colors">
+                            Enroll Now
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full text-center py-12">
+                <p class="text-gray-600">No available courses at the moment.</p>
+                <a href="{% url 'my_courses' %}" class="mt-4 inline-block bg-orange-500 text-white py-2 px-6 rounded-lg hover:bg-orange-600 transition-colors">
+                    View My Courses
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %} 
