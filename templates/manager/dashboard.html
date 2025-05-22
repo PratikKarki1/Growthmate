@@ -258,8 +258,9 @@
     });
 </script>
 
-{% if user.is_authenticated %}
+{% if user.is_authenticated and request.resolver_match.url_name == 'manager_dashboard' %}
 {% include 'includes/chat_modal.html' %}
 <script src="{% static 'js/chat.js' %}"></script>
 {% endif %}
+
 {% endblock %}

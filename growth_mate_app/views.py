@@ -44,7 +44,7 @@ def is_admin(user):
 def signup(request):
     if request.method == "POST":
         email = request.POST.get("email")
-        password = request.POST.get("password")
+        password = request.POST.get("password1")  # Changed from password to password1
         first_name = request.POST.get("first_name")
         last_name = request.POST.get("last_name")
         role = request.POST.get("role")
@@ -108,7 +108,7 @@ def login_view(request):
             messages.error(request, "Invalid login credentials, please try again.")
             return redirect("login")
 
-        # Authenticate with username (email) and password
+        # Authenticate with username (which is email) and password
         user = authenticate(request, username=user.username, password=password)
         print(f"Authentication result: {'Success' if user else 'Failed'}")
 
@@ -123,7 +123,7 @@ def login_view(request):
         try:
             user_profile = UserProfile.objects.get(user=user)
             print(f"User profile found with role: {user_profile.role}")
-            if user_profile.role == 'admin' or user.is_superuser:
+            if user.is_superuser:
                 return redirect('admin_dashboard')
             elif user_profile.role == 'manager':
                 return redirect('manager_dashboard')

@@ -9,3 +9,7 @@ virtualenv/
 __pycache__/
 *.pyc
 *.txt
+
+.env
+env/
+media/

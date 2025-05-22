@@ -51,8 +51,13 @@
                     </div>
                     <p class="text-2xl font-bold text-gray-900 mt-2">{{ overall_progress }}%</p>
                 </div>
-                <p class="text-sm text-blue-600 mt-2">{% if overall_progress > 50 %}Above average{% else %}Keep going!{%
-                    endif %}</p>
+                <p class="text-sm text-blue-600 mt-2">
+                    {% if overall_progress > 50 %}
+                    Above average
+                    {% else %}
+                    Keep going!
+                    {% endif %}
+                </p>
             </div>
 
             <!-- Total Courses -->
@@ -137,8 +142,9 @@
     </main>
 </div>
 
-{% if user.is_authenticated %}
+{% if user.is_authenticated and request.resolver_match.url_name == 'employee_dashboard' %}
 {% include 'includes/chat_modal.html' %}
 <script src="{% static 'js/chat.js' %}"></script>
 {% endif %}
+
 {% endblock %}
